@@ -10,6 +10,7 @@
 
 ### Configuration ###
 ###my $standings_link = 'http://soccernet.espn.go.com/tables?league=eng.1';
+##my $standings_link = 'http://news.bbc.co.uk/sport2/hi/football/eng_prem/table/default.stm';
 #my $standings_link = 'http://www.espnfc.com/barclays-premier-league/23/table';
 my $standings_link = 'http://www.bbc.com/sport/football/premier-league/table';
 my @teams_to_report = ('Arsenal', 'Tottenham');
@@ -211,7 +212,6 @@ foreach my $rteam ( sort { $teams_stats{$a}->{'Pos'} <=> $teams_stats{$b}->{'Pos
     }
   }
 
-print "DEBUG: rteam = $rteam ; max_points = $max_points ; leader_points = $leader_points ; points_back = $points_back ; points_left = $points_left ; totteringham_clinch = $totteringham_clinch\n";
   #output format:       TEAM  Pos  P  Pts  GD g_l p_b p_l max  -----
   $out_text .= sprintf("%16s\t%3s %2s %3s %3s %10s %8s %8s %7s %10s\n",
                 $rteam,
@@ -312,4 +312,3 @@ sub mailsendmail {
   sendmail(%mail) or die $Mail::Sendmail::error;
   #print "mail sent ok:\n", $Mail::Sendmail::log;
 }
-
