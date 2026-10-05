@@ -68,3 +68,11 @@ printf 'To: you@example.com\nSubject: test\n\ntest\n' | /usr/sbin/sendmail -oi -
 ```
 
 The state file keeps `--mail` from sending again on later days.
+
+## Tests
+
+```
+prove t/
+```
+
+The tests run the script against generated standings, so they need no network access.
