@@ -9,8 +9,10 @@ use warnings;
 #
 # Data: ESPN's public standings JSON. Core Perl modules only.
 #
-# Usage: tottingham.pl [--mail] [--file standings.json]
+# Usage: tottingham.pl [--mail --to ADDR [--from ADDR]] [--file standings.json]
 #   --mail   send the report via sendmail if St. Totteringham's Day has arrived
+#   --to     recipient address (required with --mail)
+#   --from   sender address (default tottingham@localhost)
 #   --file   read standings from a local JSON file instead of fetching (testing)
 #   --state  state file recording the season already mailed (default ~/.tottingham_state)
 #            so --mail sends at most once per season
@@ -23,14 +25,16 @@ use Getopt::Long;
 my $standings_url  = 'https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings';
 my $season_games   = 38;
 my $points_for_win = 3;
-my $mail_to        = 'mikeokb@gmail.com';
-my $mail_from      = 'mmajor@localhost';
+my $mail_from      = 'tottingham@localhost';
+my $mail_to;
 my $sendmail       = $ENV{TOTTINGHAM_SENDMAIL} || '/usr/sbin/sendmail';
 my $state_file     = ($ENV{HOME} || '.') . '/.tottingham_state';
 
 my ($do_mail, $file);
-GetOptions('mail' => \$do_mail, 'file=s' => \$file, 'state=s' => \$state_file)
-  or die "usage: $0 [--mail] [--file F] [--state F]\n";
+GetOptions('mail' => \$do_mail, 'to=s' => \$mail_to, 'from=s' => \$mail_from,
+           'file=s' => \$file, 'state=s' => \$state_file)
+  or die "usage: $0 [--mail --to ADDR [--from ADDR]] [--file F] [--state F]\n";
+die "--mail requires --to ADDR\n" if $do_mail && !$mail_to;
 
 ### Fetch ###
 sub fetch_standings {

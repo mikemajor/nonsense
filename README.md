@@ -11,12 +11,14 @@ Standings come from ESPN's public JSON endpoint. No API key is needed.
 ## Usage
 
 ```
-perl tottingham.pl [--mail] [--file standings.json] [--state FILE]
+perl tottingham.pl [--mail --to ADDR [--from ADDR]] [--file standings.json] [--state FILE]
 ```
 
 | Option | Effect |
 |---|---|
 | `--mail` | Email the report if St. Totteringham's Day has arrived (see below). |
+| `--to ADDR` | Recipient address. Required with `--mail`. |
+| `--from ADDR` | Sender address. Default `tottingham@localhost`. |
 | `--file F` | Read standings from a local JSON file instead of fetching. Useful for testing. |
 | `--state F` | State file recording the season already mailed. Default `~/.tottingham_state`. |
 
@@ -47,7 +49,7 @@ The calculation assumes a 38-game season and 3 points per win. Both are variable
 
 Setup:
 
-1. Edit `$mail_to` and `$mail_from` near the top of the script.
+1. Pass `--to` (and optionally `--from`) with `--mail`.
 2. Make sure `/usr/sbin/sendmail` exists and can deliver mail, or change `$sendmail`. The `TOTTINGHAM_SENDMAIL` environment variable also overrides the path.
 
 Local sendmail delivers directly, so it only works where outbound port 25 is open and the sending host is trusted by the recipient's mail provider. Home and office networks often block port 25, and large providers such as Gmail may reject or spam-filter mail from a machine without proper DNS. If mail does not arrive, check `mailq`, or configure your local MTA to relay through an authenticated SMTP server (Postfix `relayhost`, msmtp, and similar).
@@ -61,7 +63,7 @@ printf 'To: you@example.com\nSubject: test\n\ntest\n' | /usr/sbin/sendmail -oi -
 ## Running daily with cron
 
 ```
-0 8 * * * /usr/bin/perl /path/to/tottingham.pl --mail >> $HOME/.tottingham.log 2>&1
+0 8 * * * /usr/bin/perl /path/to/tottingham.pl --mail --to you@example.com >> $HOME/.tottingham.log 2>&1
 ```
 
 The state file keeps `--mail` from sending again on later days.
