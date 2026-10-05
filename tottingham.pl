@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-# tottingham.pl         mike@mmajor.com
+# tottingham.pl
 # Calculates and reports whether it is St. Totteringham's Day: the day Arsenal
 # become mathematically certain to finish above Tottenham in the Premier League.
 # (see http://www.chiark.greenend.org.uk/~mikepitt/totteringham.html)
