@@ -9,9 +9,11 @@ use warnings;
 #
 # Data: ESPN's public standings JSON. Core Perl modules only.
 #
-# Usage: tottingham.pl [--mail --to ADDR [--from ADDR]] [--file standings.json]
+# Usage: tottingham.pl [--mail|--dry-run --to ADDR [--from ADDR]] [--file standings.json]
 #   --mail   send the report via sendmail if St. Totteringham's Day has arrived
-#   --to     recipient address (required with --mail)
+#   --dry-run  like --mail, but print the email (or why none would be sent) instead of
+#              sending it; the state file is left untouched
+#   --to     recipient address (required with --mail/--dry-run)
 #   --from   sender address (default tottingham@localhost)
 #   --file   read standings from a local JSON file instead of fetching (testing)
 #   --state  state file recording the season already mailed (default ~/.tottingham_state)
@@ -30,11 +32,12 @@ my $mail_to;
 my $sendmail       = $ENV{TOTTINGHAM_SENDMAIL} || '/usr/sbin/sendmail';
 my $state_file     = ($ENV{HOME} || '.') . '/.tottingham_state';
 
-my ($do_mail, $file);
-GetOptions('mail' => \$do_mail, 'to=s' => \$mail_to, 'from=s' => \$mail_from,
+my ($do_mail, $dry_run, $file);
+GetOptions('mail' => \$do_mail, 'dry-run' => \$dry_run, 'to=s' => \$mail_to, 'from=s' => \$mail_from,
            'file=s' => \$file, 'state=s' => \$state_file)
-  or die "usage: $0 [--mail --to ADDR [--from ADDR]] [--file F] [--state F]\n";
-die "--mail requires --to ADDR\n" if $do_mail && !$mail_to;
+  or die "usage: $0 [--mail|--dry-run --to ADDR [--from ADDR]] [--file F] [--state F]\n";
+$do_mail = 1 if $dry_run;
+die "--mail/--dry-run requires --to ADDR\n" if $do_mail && !$mail_to;
 
 ### Fetch ###
 sub fetch_standings {
@@ -106,7 +109,16 @@ if (open(my $sf, '<', $state_file)) {
   chomp($mailed_season = <$sf> // '');
   close($sf);
 }
-if ($do_mail && $clinched && $mailed_season ne $season) {
+if ($do_mail && $dry_run) {
+  if (!$clinched) {
+    print "\n[dry-run] No email: St. Totteringham's Day has not arrived.\n";
+  } elsif ($mailed_season eq $season) {
+    print "\n[dry-run] No email: already sent for season $season.\n";
+  } else {
+    print "\n[dry-run] Would send via $sendmail:\n"
+        . "From: $mail_from\nTo: $mail_to\nSubject: Happy St. Totteringham's Day!\n\n$out";
+  }
+} elsif ($do_mail && $clinched && $mailed_season ne $season) {
   open(my $mail, '|-', $sendmail, '-oi', '-t') or die "Can't run $sendmail: $!\n";
   print $mail "From: $mail_from\nTo: $mail_to\nSubject: Happy St. Totteringham's Day!\n\n$out";
   close($mail) or die "sendmail failed: $?\n";

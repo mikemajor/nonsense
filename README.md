@@ -11,13 +11,14 @@ Standings come from ESPN's public JSON endpoint. No API key is needed.
 ## Usage
 
 ```
-perl tottingham.pl [--mail --to ADDR [--from ADDR]] [--file standings.json] [--state FILE]
+perl tottingham.pl [--mail|--dry-run --to ADDR [--from ADDR]] [--file standings.json] [--state FILE]
 ```
 
 | Option | Effect |
 |---|---|
 | `--mail` | Email the report if St. Totteringham's Day has arrived (see below). |
-| `--to ADDR` | Recipient address. Required with `--mail`. |
+| `--dry-run` | Like `--mail`, but print the email it would send (or why it wouldn't) and send nothing. The state file is not touched. |
+| `--to ADDR` | Recipient address. Required with `--mail` or `--dry-run`. |
 | `--from ADDR` | Sender address. Default `tottingham@localhost`. |
 | `--file F` | Read standings from a local JSON file instead of fetching. Useful for testing. |
 | `--state F` | State file recording the season already mailed. Default `~/.tottingham_state`. |
