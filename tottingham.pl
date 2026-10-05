@@ -12,6 +12,8 @@ use warnings;
 # Usage: tottingham.pl [--mail] [--file standings.json]
 #   --mail   send the report via sendmail if St. Totteringham's Day has arrived
 #   --file   read standings from a local JSON file instead of fetching (testing)
+#   --state  state file recording the season already mailed (default ~/.tottingham_state)
+#            so --mail sends at most once per season
 
 use JSON::PP qw(decode_json);
 use HTTP::Tiny;
@@ -23,10 +25,12 @@ my $season_games   = 38;
 my $points_for_win = 3;
 my $mail_to        = 'mikeokb@gmail.com';
 my $mail_from      = 'mmajor@localhost';
-my $sendmail       = '/usr/sbin/sendmail';
+my $sendmail       = $ENV{TOTTINGHAM_SENDMAIL} || '/usr/sbin/sendmail';
+my $state_file     = ($ENV{HOME} || '.') . '/.tottingham_state';
 
 my ($do_mail, $file);
-GetOptions('mail' => \$do_mail, 'file=s' => \$file) or die "usage: $0 [--mail] [--file F]\n";
+GetOptions('mail' => \$do_mail, 'file=s' => \$file, 'state=s' => \$state_file)
+  or die "usage: $0 [--mail] [--file F] [--state F]\n";
 
 ### Fetch ###
 sub fetch_standings {
@@ -92,8 +96,17 @@ $out .= "\n$status\n";
 print $out;
 
 ### Mail ###
-if ($do_mail && $clinched) {
+my $season = $data->{seasons}[0]{year} // 'unknown';
+my $mailed_season = '';
+if (open(my $sf, '<', $state_file)) {
+  chomp($mailed_season = <$sf> // '');
+  close($sf);
+}
+if ($do_mail && $clinched && $mailed_season ne $season) {
   open(my $mail, '|-', $sendmail, '-oi', '-t') or die "Can't run $sendmail: $!\n";
   print $mail "From: $mail_from\nTo: $mail_to\nSubject: Happy St. Totteringham's Day!\n\n$out";
   close($mail) or die "sendmail failed: $?\n";
+  open(my $sf, '>', $state_file) or die "Can't write $state_file: $!\n";
+  print $sf "$season\n";
+  close($sf);
 }
