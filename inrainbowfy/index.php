@@ -87,16 +87,22 @@
     font-size: 28px;
     font-family: monospace;
     text-transform: uppercase;
-    margin-top: 4px;
+    margin-top: 12px;
+  }
+  .buttons {
+    /* side by side, even on a narrow phone */
+    display: flex;
+    gap: 8px;
   }
   .button {
     background-color: #3366ff;
     border: none;
     color: white;
-    padding: 15px 32px;
-    font-size: 24px;
+    /* shrink padding and text on narrow screens so both buttons fit on one row */
+    padding: 15px clamp(12px, 4vw, 32px);
+    font-size: clamp(18px, 5vw, 24px);
+    white-space: nowrap;
     cursor: pointer;
-    margin: 0 8px 8px 0;
   }
   .button.secondary {
     background-color: #555;
@@ -134,8 +140,10 @@
  </svg>
 
  <form action="" method="post">
-   <input type="submit" value="inrainbowfy" class="button">
-   <button type="button" id="savepng" class="button secondary">save as PNG</button>
+   <div class="buttons">
+    <input type="submit" value="inrainbowfy" class="button">
+    <button type="button" id="savepng" class="button secondary">save as PNG</button>
+   </div>
    <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h(($safeText === '') ? $defaultInput : $safeText) ?></textarea>
  </form>
 </div>
