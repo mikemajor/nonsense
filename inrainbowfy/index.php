@@ -83,7 +83,7 @@
     font-size: 28px;
     font-family: monospace;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-top: 4px;
   }
   .button {
     background-color: #3366ff;
@@ -130,9 +130,9 @@
  </svg>
 
  <form action="" method="post">
-   <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h(($safeText === '') ? $defaultInput : $safeText) ?></textarea>
    <input type="submit" value="inrainbowfy" class="button">
    <button type="button" id="savepng" class="button secondary">save as PNG</button>
+   <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h(($safeText === '') ? $defaultInput : $safeText) ?></textarea>
  </form>
 </div>
 
