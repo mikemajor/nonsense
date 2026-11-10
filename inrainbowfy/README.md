@@ -41,7 +41,7 @@ Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
 
 | Path | What it is |
 |---|---|
-| `index.php` | The whole app. The cover is one SVG, and each line is stretched to exactly the same width with `textLength`. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
+| `index.php` | The whole app. The cover is one SVG, and every line is justified to exactly the same width by widening only the gaps between letters (`textLength` with `lengthAdjust="spacing"`), so letters keep their real shape. A typed line too wide to fit is squeezed instead. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
 | `fonts/roadgeek2005lowline.*` | Roadgeek 2005, in woff2, woff and ttf. |
 | `fonts/transportmedium.woff2` | Transport Medium, built by `tools/build_transport.py`, if you add it (see above). |
 | `tools/build_transport.py` | Fixes Transport's baseline and blank characters, adds accented capitals and `Ø Ł Đ _`, saves woff2. |

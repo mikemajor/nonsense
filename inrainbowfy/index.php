@@ -3,9 +3,12 @@
   // renders your text as Radiohead's In Rainbows album cover
 
   /* Layout: the cover is drawn as one 860x860 SVG. Every line is forced to the
-     same width with textLength + lengthAdjust="spacingAndGlyphs", so lines are
-     edge-aligned regardless of their content (no CSS justify/scale tricks), and
-     the whole picture scales as one unit on small screens.
+     same width with textLength + lengthAdjust="spacing", so lines are
+     edge-aligned by widening only the gaps between letters; the letters keep
+     their real shape. The font size is small enough that every phrase in the
+     list fits; a typed line that's naturally wider than TEXT_WIDTH would
+     overlap, so fitLines() (JavaScript) squeezes just that line instead.
+     The whole picture scales as one unit on small screens.
      Tune the cover geometry with the constants below. */
 
   // phrases the starting cover and the randomize button pick from (7 at a time);
@@ -77,7 +80,8 @@
   const COVER_SIZE   = 860;  // SVG viewBox width and height
   const TEXT_LEFT    = 20;   // x of the left edge of every line
   const TEXT_WIDTH   = 820;  // every line is stretched to exactly this width
-  const FONT_SIZE    = 99;   // Transport's capitals are 0.746em tall, so 99px = 74px capitals
+  const FONT_SIZE    = 82;   // Transport's capitals are 0.746em tall, so 82px = 61px capitals;
+                              // the widest phrase in the list just fits at this size
 
   // Fonts: Transport Medium (the UK road-sign face the real cover uses), built by
   // tools/build_transport.py: fixed baseline, plus accented capitals, O-slash,
@@ -99,7 +103,7 @@
     }
     return $css;
   }
-  const FIRST_BASE   = 100;  // baseline y of the first line
+  const FIRST_BASE   = 94;   // baseline y of the first line
   const LINE_PITCH   = 122;  // distance between baselines
 
   // line colors (top to bottom) and the cover character for each line:
@@ -257,7 +261,7 @@
 <?php
   foreach ($arrLines as $i => $line) {
     if (trim($line) === '') { continue; }
-    printf("  <text class=\"%s\" x=\"%d\" y=\"%d\" textLength=\"%d\" lengthAdjust=\"spacingAndGlyphs\">%s</text>\n",
+    printf("  <text class=\"%s\" x=\"%d\" y=\"%d\" textLength=\"%d\" lengthAdjust=\"spacing\">%s</text>\n",
       $lineStyles[$i][0], TEXT_LEFT, FIRST_BASE + $i * LINE_PITCH, TEXT_WIDTH, h($line));
   }
 ?>
@@ -291,6 +295,20 @@ async function toDataURL(url) {
     reader.readAsDataURL(blob);
   });
 }
+
+// Lines are justified by widening the gaps only (lengthAdjust="spacing"). A line
+// that's naturally wider than its slot would overlap itself, so once the fonts
+// have loaded, squeeze just those lines instead.
+function fitLines(svg) {
+  for (const t of svg.querySelectorAll('text[textLength]')) {
+    const want = Number(t.getAttribute('textLength'));
+    t.removeAttribute('textLength');
+    const natural = t.getComputedTextLength();
+    t.setAttribute('textLength', want);
+    t.setAttribute('lengthAdjust', natural > want ? 'spacingAndGlyphs' : 'spacing');
+  }
+}
+document.fonts.ready.then(() => fitLines(document.getElementById('cover')));
 
 document.getElementById('savepng').addEventListener('click', async () => {
   const button = document.getElementById('savepng');
