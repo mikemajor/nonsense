@@ -369,7 +369,7 @@ document.getElementById('savepng').addEventListener('click', async () => {
     canvas.toBlob(png => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(png);
-      a.download = 'inrainbows.png';
+      a.download = 'inrainbowfy.png';
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }, 'image/png');
