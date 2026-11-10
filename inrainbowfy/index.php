@@ -78,16 +78,25 @@
     'NOTBARMUSIC',
     'RENT STRIKE',
     'GO WITH DOG',
-    'IF THEN ELS',
+    'IF THEN ELSE',
+    'CALL UR MUM',
+    'GET UR DMV',
+    'OK EVRYWHERE',
+    'LIMB OF KINGS',
+    'Y R U A Q T',
+    'LETTUCEPATCH',
+    'BLUNTZ MILLY',
+    'DIRT CAMPIN',
   );
-  $desiredLineLength = 13;  // most characters per line, after random padding (the cover has 12-13)
+  $desiredLineLength = 13;  // most characters of text per line, and what random padding fills to
+                            // (the cover's lines have 12-13)
 
   const COVER_SIZE   = 860;  // SVG viewBox width and height
   const TEXT_LEFT    = 4;    // x of the left edge of every line
   const TEXT_WIDTH   = 852;  // every line is justified to exactly this width
   const FONT_SIZE    = 104;  // Transport's capitals are 0.746em tall, so 104px = 78px capitals
                               // (the real cover's are ~84px, but then many phrases don't fit)
-  const MAX_TIGHTEN  = 0.08; // em each gap may shrink by to fit (the real cover uses up to ~0.056)
+  const MAX_TIGHTEN  = 0.085; // em each gap may shrink by to fit (the real cover uses up to ~0.056)
 
   // Fonts: Transport Medium (the UK road-sign face the real cover uses), built by
   // tools/build_transport.py: fixed baseline, plus accented capitals, O-slash,
@@ -452,8 +461,9 @@ document.getElementById('savepng').addEventListener('click', async () => {
     global $desiredLineLength;
     //work on characters, not bytes, so letters like Ø count once and never get split
     $chars = preg_split('//u', $strInput, -1, PREG_SPLIT_NO_EMPTY);
-    //if the line is already too long, truncate to one less than desired length
-    if (count($chars) >= $desiredLineLength) { $chars = array_slice($chars, 0, $desiredLineLength - 1); }
+    //keep at most $desiredLineLength characters of the text (with its cover
+    //character a line can reach one more; the width check below has the last word)
+    if (count($chars) > $desiredLineLength) { $chars = array_slice($chars, 0, $desiredLineLength); }
     //if it's too wide to fit even with its cover character alone (lots of Ws,
     //say), drop letters from the end until it fits
     while (count($chars) > 0 && !lineFits(array_merge($chars, array($rainbowChar)))) {
