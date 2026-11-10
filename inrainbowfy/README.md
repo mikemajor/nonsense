@@ -22,8 +22,7 @@ The page expects the cover artwork, with its lettering removed, at `images/irbg3
 
 | Path | What it is |
 |---|---|
-| `index.php` | The original version: the cover is seven HTML headings over a CSS background, widened with `transform: scale`. Line ends don't line up. |
-| `svg.php` | The new version: the cover is one SVG, and each line is stretched to exactly the same width with `textLength`. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
+| `index.php` | The whole app. The cover is one SVG, and each line is stretched to exactly the same width with `textLength`. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
 | `styles/stylesheet.css` | `@font-face` for the font and the seven cover colors. |
 | `fonts/roadgeek2005lowline.*` | The font, in woff2, woff and ttf. |
 
