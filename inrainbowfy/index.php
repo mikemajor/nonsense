@@ -5,11 +5,14 @@
   /* Layout: the cover is drawn as one 860x860 SVG. Every line is forced to the
      same width with textLength + lengthAdjust="spacing", so lines are
      edge-aligned by widening only the gaps between letters; the letters keep
-     their real shape. Lines are trimmed to fit: at most 13 characters, and
-     letters are dropped from the end while the line's natural width (from the
-     fonts' width tables) is over TEXT_WIDTH. As a safety net for characters
-     neither table knows, fitLines() (JavaScript) squeezes a line that still
-     doesn't fit rather than let it overlap.
+     their real shape. Like the real cover, gaps may also shrink a little
+     (up to MAX_TIGHTEN em each). Line widths come from the fonts' width
+     tables: letters are dropped from the end of a line that can't fit even
+     tightened, and random padding spaces are only added while the line still
+     fits. As a safety net for characters neither table knows, fitLines()
+     (JavaScript) squeezes a line that still doesn't fit rather than let it
+     overlap. Geometry is measured from the real cover: capitals 0.099 of the
+     cover tall (ours slightly less), lines 0.148 apart, almost no margins.
      The whole picture scales as one unit on small screens.
      Tune the cover geometry with the constants below. */
 
@@ -77,13 +80,14 @@
     'GO WITH DOG',
     'IF THEN ELS',
   );
-  $desiredLineLength = 14;  // characters per line, after random padding
+  $desiredLineLength = 13;  // most characters per line, after random padding (the cover has 12-13)
 
   const COVER_SIZE   = 860;  // SVG viewBox width and height
-  const TEXT_LEFT    = 20;   // x of the left edge of every line
-  const TEXT_WIDTH   = 820;  // every line is justified to exactly this width
-  const FONT_SIZE    = 82;   // Transport's capitals are 0.746em tall, so 82px = 61px capitals;
-                              // the widest phrase in the list just fits at this size
+  const TEXT_LEFT    = 4;    // x of the left edge of every line
+  const TEXT_WIDTH   = 852;  // every line is justified to exactly this width
+  const FONT_SIZE    = 104;  // Transport's capitals are 0.746em tall, so 104px = 78px capitals
+                              // (the real cover's are ~84px, but then many phrases don't fit)
+  const MAX_TIGHTEN  = 0.08; // em each gap may shrink by to fit (the real cover uses up to ~0.056)
 
   // Fonts: Transport Medium (the UK road-sign face the real cover uses), built by
   // tools/build_transport.py: fixed baseline, plus accented capitals, O-slash,
@@ -119,8 +123,9 @@
   }
   $charWidths = loadWidths();
 
-  const FIRST_BASE   = 94;   // baseline y of the first line
-  const LINE_PITCH   = 122;  // distance between baselines
+  const FIRST_BASE   = 82;   // baseline y of the first line (capitals start ~4px from the top)
+  const LINE_PITCH   = 128;  // distance between baselines; the last line's _ runs off the
+                              // bottom edge, as on the real cover
 
   // line colors (top to bottom) and the cover character for each line:
   // the original cover uses / in the first four lines and _ in the last three
@@ -315,13 +320,16 @@ async function toDataURL(url) {
 // Lines are justified by widening the gaps only (lengthAdjust="spacing"). A line
 // that's naturally wider than its slot would overlap itself, so once the fonts
 // have loaded, squeeze just those lines instead.
+// (Gaps may shrink by up to MAX_TIGHTEN em, as the server assumes.)
+const MAX_TIGHTEN_PX = <?= MAX_TIGHTEN * FONT_SIZE ?>;
 function fitLines(svg) {
   for (const t of svg.querySelectorAll('text[textLength]')) {
     const want = Number(t.getAttribute('textLength'));
     t.removeAttribute('textLength');
     const natural = t.getComputedTextLength();
     t.setAttribute('textLength', want);
-    t.setAttribute('lengthAdjust', natural > want ? 'spacingAndGlyphs' : 'spacing');
+    const slack = Math.max(0, t.getNumberOfChars() - 1) * MAX_TIGHTEN_PX;
+    t.setAttribute('lengthAdjust', natural - slack > want ? 'spacingAndGlyphs' : 'spacing');
   }
 }
 document.fonts.ready.then(() => fitLines(document.getElementById('cover')));
@@ -411,16 +419,15 @@ document.getElementById('savepng').addEventListener('click', async () => {
     return strtr($s, $map);
   }
 
-  //natural width in px of a finished line: these characters, the cover
-  //character, and the spaces that pad it to $desiredLineLength characters
-  function naturalWidth($chars, $rainbowChar) {
-    global $charWidths, $desiredLineLength;
+  //does a line of these characters fit in TEXT_WIDTH, allowing each gap
+  //between characters to shrink by up to MAX_TIGHTEN em?
+  function lineFits($chars) {
+    global $charWidths;
     $em = 0;
-    foreach (array_merge($chars, array($rainbowChar)) as $ch) {
+    foreach ($chars as $ch) {
       $em += isset($charWidths[$ch]) ? $charWidths[$ch] : 0.6;
     }
-    $em += max(0, $desiredLineLength - count($chars) - 1) * (isset($charWidths[' ']) ? $charWidths[' '] : 0.25);
-    return $em * FONT_SIZE;
+    return ($em - max(0, count($chars) - 1) * MAX_TIGHTEN) * FONT_SIZE <= TEXT_WIDTH;
   }
 
   function putRainbowsInLine($strInput, $rainbowChar) {
@@ -429,16 +436,19 @@ document.getElementById('savepng').addEventListener('click', async () => {
     $chars = preg_split('//u', $strInput, -1, PREG_SPLIT_NO_EMPTY);
     //if the line is already too long, truncate to one less than desired length
     if (count($chars) >= $desiredLineLength) { $chars = array_slice($chars, 0, $desiredLineLength - 1); }
-    //if it's too wide to fit (lots of Ws, say), drop letters from the end until it fits
-    while (count($chars) > 0 && naturalWidth($chars, $rainbowChar) > TEXT_WIDTH) {
+    //if it's too wide to fit even with its cover character alone (lots of Ws,
+    //say), drop letters from the end until it fits
+    while (count($chars) > 0 && !lineFits(array_merge($chars, array($rainbowChar)))) {
       array_pop($chars);
     }
     //add the cover character somewhere in the line
     array_splice($chars, rand(0, count($chars)), 0, array($rainbowChar));
-    //add spaces somewhere in the line to get it to the desired length
-    $countAddSpaces = $desiredLineLength - count($chars);
-    for ($x = 0; $x < $countAddSpaces; $x++) {
-      array_splice($chars, rand(1, count($chars) - 1), 0, array(' '));
+    //add spaces somewhere in the line, up to the desired length, while it still fits
+    while (count($chars) < $desiredLineLength && count($chars) > 1) {
+      $padded = $chars;
+      array_splice($padded, rand(1, count($chars) - 1), 0, array(' '));
+      if (!lineFits($padded)) { break; }
+      $chars = $padded;
     }
     return implode('', $chars);
   }
