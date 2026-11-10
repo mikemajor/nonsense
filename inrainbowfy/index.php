@@ -123,9 +123,9 @@
   }
   $charWidths = loadWidths();
 
-  const FIRST_BASE   = 82;   // baseline y of the first line (capitals start ~4px from the top)
-  const LINE_PITCH   = 128;  // distance between baselines; the last line's _ runs off the
-                              // bottom edge, as on the real cover
+  const FIRST_BASE   = 81;   // baseline y of the first line (capitals start ~3px from the top)
+  const LINE_PITCH   = 126;  // distance between baselines; leaves room for the bottom line's _
+                              // (which reaches ~20px below its baseline) with ~3px to spare
 
   // line colors (top to bottom) and the cover character for each line:
   // the original cover uses / in the first four lines and _ in the last three
