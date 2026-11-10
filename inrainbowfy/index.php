@@ -37,7 +37,7 @@
     'BOT MUFFINS',
     'SALT FLASKS',
     'BRNKSMNSHIP',
-    'GUAC IS XTR',
+    'GUAC IS XTRA',
     'KEEP IT UWU',
     'FASHIONABLE',
     'BLOCK TYPES',
