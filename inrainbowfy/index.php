@@ -9,7 +9,8 @@
      Tune the cover geometry with the constants below. */
 
   // phrases the starting cover and the randomize button pick from (7 at a time);
-  // add more here, upper case, up to 13 characters (longer ones get cut off)
+  // add more here, upper case, up to 13 characters (longer ones get cut off);
+  // non-ASCII letters like Ø are fine (the font has Latin-1)
   $phrasePool = array(
     'COTTON CNDY',
     'ROLLERSKATE',
@@ -22,6 +23,54 @@
     'KING CONMAN',
     'RAINBOW PIG',
     'IMPALA TUSK',
+    'RON BRONSON',
+    'GARDEN PALS',
+    'PETAL SMILE',
+    'BOT MUFFINS',
+    'SALT FLASKS',
+    'BRNKSMNSHIP',
+    'GUAC IS XTR',
+    'KEEP IT UWU',
+    'FASHIONABLE',
+    'BLOCK TYPES',
+    'BEE TANK UP',
+    'IDK MY NAME',
+    'SICK JPEGGS',
+    'PLATFORMEEL',
+    'PAY YR RATE',
+    'CHEWS LIIFE',
+    'REMOTE WORK',
+    'VICISSITUDE',
+    'PULCHRA EST',
+    'CAMO ONESIE',
+    'BOT ON BOAT',
+    'PANAMONSTER',
+    'PRIVATE ICE',
+    'S-TIER TACO',
+    'PIKES PLACE',
+    'MILTONRADLY',
+    'DUWAMISH HQ',
+    'CHECK ENGIN',
+    'HYPNODRONES',
+    'I WZ INVRTD',
+    'ULALA SAVES',
+    'SMBDY LUV U',
+    'MOOONWALKER',
+    'PARTY TRAIN',
+    'PLUM PACZKI',
+    'ANNIHILATED',
+    'PØLSE VOGNE',
+    'KRUSH CHEVY',
+    'EEEE EDDDDD',
+    'LATER TOADS',
+    'UNRELIVABLE',
+    'SIGN HORNET',
+    'MOSTLY HARM',
+    'GRAVITRON G',
+    'NOTBARMUSIC',
+    'RENT STRIKE',
+    'GO WITH DOG',
+    'IF THEN ELS',
   );
   $desiredLineLength = 14;  // characters per line, after random padding
 
@@ -272,7 +321,13 @@ document.getElementById('savepng').addEventListener('click', async () => {
     // (replaces FILTER_SANITIZE_STRING, deprecated in PHP 8.1, with identical behavior)
     $v = strip_tags($v);
     $v = preg_replace('/<.*$/s', '', $v);              // drop any unclosed tag remnant
-    $v = preg_replace('/[\x00-\x1F\x80-\xFF`]/', '', $v); // strip low, high and backtick chars
+    // strip control and invisible characters and backticks; keep printable UTF-8
+    // letters like Ø (invalid UTF-8 falls back to dropping all non-ASCII bytes)
+    if (preg_match('//u', $v)) {
+      $v = preg_replace('/[\x00-\x1F\x7F`]|\p{C}/u', '', $v);
+    } else {
+      $v = preg_replace('/[\x00-\x1F\x80-\xFF`]/', '', $v);
+    }
     $v = str_replace(array('"', "'"), array('&#34;', '&#39;'), $v);
     //now replace the placeholder with the original newline
     $v = str_replace("[NEWLINE]", "\n", $v);
@@ -281,17 +336,17 @@ document.getElementById('savepng').addEventListener('click', async () => {
 
   function putRainbowsInLine($strInput, $rainbowChar) {
     global $desiredLineLength;
+    //work on characters, not bytes, so letters like Ø count once and never get split
+    $chars = preg_split('//u', $strInput, -1, PREG_SPLIT_NO_EMPTY);
     //if the line is already too long, truncate to one less than desired length
-    if (strlen($strInput) >= $desiredLineLength) { $strInput = substr($strInput, 0, $desiredLineLength - 1); }
+    if (count($chars) >= $desiredLineLength) { $chars = array_slice($chars, 0, $desiredLineLength - 1); }
     //add the cover character somewhere in the line
-    $randomPosition = rand(0, strlen($strInput));
-    $strReturn = substr_replace($strInput, $rainbowChar, $randomPosition, 0);
+    array_splice($chars, rand(0, count($chars)), 0, array($rainbowChar));
     //add spaces somewhere in the line to get it to the desired length
-    $countAddSpaces = $desiredLineLength - strlen($strReturn);
+    $countAddSpaces = $desiredLineLength - count($chars);
     for ($x = 0; $x < $countAddSpaces; $x++) {
-      $randomPosition = rand(1, strlen($strReturn) - 1);
-      $strReturn = substr_replace($strReturn, ' ', $randomPosition, 0);
+      array_splice($chars, rand(1, count($chars) - 1), 0, array(' '));
     }
-    return $strReturn;
+    return implode('', $chars);
   }
 ?>
