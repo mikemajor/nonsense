@@ -2,6 +2,8 @@
 
 Turns your text into the cover of Radiohead's *In Rainbows*. Type up to seven lines and press **inrainbowfy**: each line is upper-cased, trimmed to fit, sprinkled with one random `/` or `_` like the original cover, padded with random spaces, and drawn in the cover's seven colors.
 
+It starts with 7 random phrases from a built-in list (`$phrasePool` at the top of `index.php`; add your own). **randomize** picks new phrases and shuffles the order, but always keeps any lines you typed yourself. **inrainbowfy** keeps your text as is and re-rolls the spacing and the `/` / `_` placement.
+
 Live at <https://www.mmajor.com/ir/>.
 
 ## Running it
