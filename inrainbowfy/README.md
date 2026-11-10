@@ -20,14 +20,24 @@ then open <http://localhost:8000/>.
 
 The page expects the cover artwork, with its lettering removed, at `images/irbg3.jpg` (about 860×860 px). The artwork is copyrighted, so it isn't included in this repo and `images/` is git-ignored. Supply your own copy. Without it, the text still renders on a plain background.
 
+### Transport font (optional)
+
+The real cover is set in Transport, the UK road-sign typeface. A free Transport Medium is available from [roads.org.uk](https://www.roads.org.uk/fonts) ([direct zip](https://www.roads.org.uk/sites/default/files/pages/fonts/transportmedium.zip)). Its site says the files are intended for private, non-commercial use, so it isn't redistributed here and `fonts/transportmedium.ttf` is git-ignored. To use it, unzip it and save `Transport Medium.ttf` as `fonts/transportmedium.ttf`.
+
+Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
+
 ## Files
 
 | Path | What it is |
 |---|---|
 | `index.php` | The whole app. The cover is one SVG, and each line is stretched to exactly the same width with `textLength`. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
-| `styles/stylesheet.css` | `@font-face` for the font and the seven cover colors. |
-| `fonts/roadgeek2005lowline.*` | The font, in woff2, woff and ttf. |
+| `fonts/roadgeek2005lowline.*` | Roadgeek 2005, in woff2, woff and ttf. |
+| `fonts/transportmedium.ttf` | Transport Medium, if you add it (see above). |
 
-## Font
+## Fonts
+
+Lines are drawn in Transport Medium where it has the character. This free version only has plain letters, digits and basic punctuation: no `_`, no accented letters. Those come from Roadgeek 2005, scaled up 129.4% so its capitals match Transport's height. `$fontFaces` in `index.php` lists exactly which characters come from Transport.
+
+Transport Medium is subject to Crown Copyright and contains public sector information licensed under the [Open Government Licence v1.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/1/). The free font file is by Nathaniel Porter, via roads.org.uk.
 
 Roadgeek 2005 Engschrift, Copyright (c) Michael D. Adams, 2005. All rights reserved. "This font may be freely distributed and used provided copyright notifications remain intact." Web font files were generated with Font Squirrel.
