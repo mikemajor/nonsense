@@ -64,7 +64,11 @@
     font-family: Arial, sans-serif;
   }
   .wrap {
+    /* keep the cover and the buttons below it on screen together: the cover
+       shrinks to the window height minus room for the buttons (about 92px) */
     max-width: <?= COVER_SIZE ?>px;
+    max-width: min(<?= COVER_SIZE ?>px, max(280px, calc(100vh - 92px)));
+    max-width: min(<?= COVER_SIZE ?>px, max(280px, calc(100dvh - 92px)));
     margin: 0 auto;
   }
   #cover {
