@@ -171,8 +171,14 @@ build(0x141, 'L', lambda pen, x0, y0, x1, y1: slash(pen, x0 + STEM / 2 - 300, CA
 for cp in (0x110, 0xD0):
     build(cp, 'D', lambda pen, x0, y0, x1, y1: poly(pen, [(x0 - 120, CAP / 2 - BAR / 2), (x0 - 120, CAP / 2 + BAR / 2),
                                                            (x0 + STEM + 330, CAP / 2 + BAR / 2), (x0 + STEM + 330, CAP / 2 - BAR / 2)]))
-U_ADV = 1100
-new_glyph(0x5F, lambda pen: poly(pen, [(40, -320), (40, -320 + BAR), (U_ADV - 40, -320 + BAR), (U_ADV - 40, -320)]), U_ADV)
+# underscore, measured from the real cover as fractions of the capital height:
+# 0.167 thick (about a vertical stem), top 0.090 below the baseline, 0.708 wide
+U_THICK = round(CAP * 0.167)
+U_TOP = -round(CAP * 0.090)
+U_WIDTH = round(CAP * 0.708)
+U_SIDE = 40
+U_ADV = U_WIDTH + 2 * U_SIDE
+new_glyph(0x5F, lambda pen: poly(pen, [(U_SIDE, U_TOP - U_THICK), (U_SIDE, U_TOP), (U_SIDE + U_WIDTH, U_TOP), (U_SIDE + U_WIDTH, U_TOP - U_THICK)]), U_ADV)
 added.append('_')
 
 # 4. metrics and tables that list every glyph
