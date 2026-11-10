@@ -130,14 +130,28 @@
   // line colors (top to bottom) and the cover character for each line:
   // the original cover uses / in the first four lines and _ in the last three
   $lineStyles = array(
-    array('yellowtext', '/'),
-    array('bluetext',   '/'),
-    array('orangetext', '/'),
-    array('greentext',  '/'),
-    array('goldtext',   '_'),
-    array('redtext',    '_'),
-    array('greytext',   '_'),
+    array('yellowtext', '/', '#f9e933'),
+    array('bluetext',   '/', '#4970b8'),
+    array('orangetext', '/', '#fd511c'),
+    array('greentext',  '/', '#519328'),
+    array('goldtext',   '_', '#f9ab1f'),
+    array('redtext',    '_', '#f93031'),
+    array('greytext',   '_', '#b2cbd3'),
   );
+
+  // the raindomise button gets one of the seven cover colors at random on every
+  // page load (each click submits the form, so each click picks a new one), with
+  // black or white text, whichever contrasts more
+  function luminance($hex) {
+    $l = 0;
+    foreach (array(0.2126, 0.7152, 0.0722) as $i => $weight) {
+      $c = hexdec(substr($hex, 1 + 2 * $i, 2)) / 255;
+      $l += $weight * ($c <= 0.03928 ? $c / 12.92 : pow(($c + 0.055) / 1.055, 2.4));
+    }
+    return $l;
+  }
+  $raindomColor = $lineStyles[array_rand($lineStyles)][2];
+  $raindomText = (luminance($raindomColor) + 0.05) / 0.05 > 1.05 / (luminance($raindomColor) + 0.05) ? '#111' : '#fff';
 
   //sanitize the form input, then decode the sanitizer's &#34;/&#39; so a quote
   //counts as one character and can't be cut in half; h() escapes everything on output
@@ -251,10 +265,11 @@
     color: #aaa;
   }
   .button.random {
-    background-color: #7a42d6;
+    background-color: <?= $raindomColor ?>;
+    color: <?= $raindomText ?>;
   }
   .button.secondary {
-    background-color: #555;
+    background-color: #7a42d6;
   }
  </style>
 </head>
@@ -269,14 +284,7 @@
      font-size: <?= FONT_SIZE ?>px;
      white-space: pre;
    }
-   .yellowtext { fill: #f9e933; }
-   .bluetext   { fill: #4970b8; }
-   .orangetext { fill: #fd511c; }
-   .greentext  { fill: #519328; }
-   .goldtext   { fill: #f9ab1f; }
-   .redtext    { fill: #f93031; }
-   .greytext   { fill: #b2cbd3; }
-  </style>
+<?php foreach ($lineStyles as $style) { echo "   .{$style[0]} { fill: {$style[2]}; }\n"; } ?>  </style>
   <rect width="100%" height="100%" fill="#0b0b1a"/>
   <image href="images/irbg3.jpg" x="0" y="0" width="<?= COVER_SIZE ?>" height="<?= COVER_SIZE ?>" preserveAspectRatio="xMidYMid slice"/>
 <?php
@@ -291,7 +299,7 @@
  <form action="" method="post">
    <div class="buttons">
     <input type="submit" value="inrainbowfy" class="button">
-    <input type="submit" name="randomize" value="randomize" class="button random" title="New random phrases (your own lines are kept)">
+    <input type="submit" name="randomize" value="raindomise" class="button random" title="New random phrases (your own lines are kept)">
     <button type="button" id="savepng" class="button secondary">save as PNG</button>
    </div>
    <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h($boxText) ?></textarea>
