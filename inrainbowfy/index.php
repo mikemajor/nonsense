@@ -77,19 +77,21 @@
   const COVER_SIZE   = 860;  // SVG viewBox width and height
   const TEXT_LEFT    = 20;   // x of the left edge of every line
   const TEXT_WIDTH   = 820;  // every line is stretched to exactly this width
-  const FONT_SIZE    = 85;   // Transport's capitals are 0.87em tall, so 85px = 74px capitals
+  const FONT_SIZE    = 99;   // Transport's capitals are 0.746em tall, so 99px = 74px capitals
 
   // Fonts: Transport Medium (the UK road-sign face the real cover uses) draws every
   // character it has; this free version lacks _ and all accented letters, so
-  // Roadgeek 2005 fills in those, scaled up 129.4% so its capitals match
-  // Transport's height (0.867em vs 0.67em). Transport isn't in the git repo (see
-  // README); without it the cover is all Roadgeek, at the same size.
+  // Roadgeek 2005 fills in those, scaled up 111.4% so its capitals match
+  // Transport's height (0.746em vs 0.67em). The Transport file is a fixed copy
+  // made by tools/fix_transport.py (the original's letters float above the
+  // baseline). It isn't in the git repo (see README); without it the cover is
+  // all Roadgeek, at the same size.
   $fontFaces = array(
-    array('family' => 'transport', 'url' => 'fonts/transportmedium.ttf', 'format' => 'truetype',
+    array('family' => 'transport', 'url' => 'fonts/transportmedium.woff2', 'format' => 'woff2',
           // only the characters this file really draws (it lists more, but they're blank)
           'extra' => 'unicode-range: U+20-22, U+25-29, U+2C-3A, U+3C, U+3E-3F, U+41-5A, U+5C, U+5E, U+61-7A, U+A0, U+A3, U+B7, U+BC-BE, U+2010, U+2153-2154, U+2219;'),
     array('family' => 'roadgeek-fill', 'url' => 'fonts/roadgeek2005lowline.woff2', 'format' => 'woff2',
-          'extra' => 'size-adjust: 129.4%;'),
+          'extra' => 'size-adjust: 111.4%;'),
   );
   function fontFaceCss($faces) {
     $css = '';
