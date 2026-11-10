@@ -139,9 +139,10 @@
     array('greytext',   '_', '#b2cbd3'),
   );
 
-  // the raindomise button gets one of the seven cover colors at random on every
-  // page load (each click submits the form, so each click picks a new one), with
-  // black or white text, whichever contrasts more
+  // the raindomise button wears one of the seven cover colors, with black or
+  // white text, whichever contrasts more. The color is kept in a cookie, so
+  // refreshing or pressing inrainbowfy keeps it; only a raindomise click picks a
+  // new one (always different from the current one). First visit: random.
   function luminance($hex) {
     $l = 0;
     foreach (array(0.2126, 0.7152, 0.0722) as $i => $weight) {
@@ -150,7 +151,16 @@
     }
     return $l;
   }
-  $raindomColor = $lineStyles[array_rand($lineStyles)][2];
+  $coverColors = array();
+  foreach ($lineStyles as $style) { $coverColors[] = $style[2]; }
+  $raindomColor = isset($_COOKIE['raindomColor']) ? (string) $_COOKIE['raindomColor'] : '';
+  if (isset($_POST['randomize']) || !in_array($raindomColor, $coverColors, true)) {
+    $others = array_values(array_diff($coverColors, array($raindomColor)));
+    $raindomColor = $others[array_rand($others)];
+    setcookie('raindomColor', $raindomColor, array(
+      'expires' => time() + 365 * 86400, 'samesite' => 'Lax',
+      'secure' => !empty($_SERVER['HTTPS']), 'httponly' => true));
+  }
   $raindomText = (luminance($raindomColor) + 0.05) / 0.05 > 1.05 / (luminance($raindomColor) + 0.05) ? '#111' : '#fff';
 
   //sanitize the form input, then decode the sanitizer's &#34;/&#39; so a quote
