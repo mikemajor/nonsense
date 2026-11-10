@@ -24,11 +24,15 @@ The page expects the cover artwork, with its lettering removed, at `images/irbg3
 
 The real cover is set in Transport, the UK road-sign typeface. A free Transport Medium is available from [roads.org.uk](https://www.roads.org.uk/fonts) ([direct zip](https://www.roads.org.uk/sites/default/files/pages/fonts/transportmedium.zip)). Its site says the files are intended for private, non-commercial use, so it isn't redistributed here and `fonts/transportmedium.woff2` is git-ignored.
 
-That file has two defects: every letter floats about 0.1em above the baseline, and some characters it lists (like `_`) are blank. `tools/fix_transport.py` fixes both and writes the web font the page expects:
+That file has defects, and no accented letters. `tools/build_transport.py` fixes the defects and adds the missing letters, then writes the web font the page expects:
+
+- every letter floats about 0.1em above the baseline: moved down onto it
+- some characters it lists (like `_` and `Ø`) are blank: rebuilt or removed
+- adds 76 upper-case letters: the accented capitals of Latin-1 and Latin Extended-A (Western, Central and Eastern European, Turkish, Baltic), each Transport's own letter plus an accent mark borrowed from Roadgeek 2005, and `Ø`, `Ł`, `Đ`, `Ð` and `_` drawn in Transport's stroke weight
 
 ```
 python3 -m venv /tmp/ft && /tmp/ft/bin/pip install fonttools brotli
-/tmp/ft/bin/python tools/fix_transport.py "Transport Medium.ttf" fonts/transportmedium.woff2
+/tmp/ft/bin/python tools/build_transport.py "Transport Medium.ttf" fonts/roadgeek2005lowline.ttf fonts/transportmedium.woff2
 ```
 
 Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
@@ -39,12 +43,12 @@ Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
 |---|---|
 | `index.php` | The whole app. The cover is one SVG, and each line is stretched to exactly the same width with `textLength`. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
 | `fonts/roadgeek2005lowline.*` | Roadgeek 2005, in woff2, woff and ttf. |
-| `fonts/transportmedium.woff2` | Transport Medium, fixed by `tools/fix_transport.py`, if you add it (see above). |
-| `tools/fix_transport.py` | Moves Transport's letters onto the baseline, corrects its cap height, removes blank characters, saves woff2. |
+| `fonts/transportmedium.woff2` | Transport Medium, built by `tools/build_transport.py`, if you add it (see above). |
+| `tools/build_transport.py` | Fixes Transport's baseline and blank characters, adds accented capitals and `Ø Ł Đ _`, saves woff2. |
 
 ## Fonts
 
-Lines are drawn in Transport Medium where it has the character. This free version only has plain letters, digits and basic punctuation: no `_`, no accented letters. Those come from Roadgeek 2005, scaled up 111.4% so its capitals match Transport's height. `$fontFaces` in `index.php` lists exactly which characters come from Transport.
+Lines are drawn in Transport Medium (as built above). Input is upper-cased, including accented letters, so only capitals matter. Characters the build still lacks (`ß`, `Æ`, `Œ`, letters with a breve or ogonek such as `Ğ` and `Ą`, and most symbols) come from Roadgeek 2005, scaled up 111.4% so its capitals match Transport's height.
 
 Transport Medium is subject to Crown Copyright and contains public sector information licensed under the [Open Government Licence v1.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/1/). The free font file is by Nathaniel Porter, via roads.org.uk.
 

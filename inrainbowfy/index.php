@@ -79,17 +79,16 @@
   const TEXT_WIDTH   = 820;  // every line is stretched to exactly this width
   const FONT_SIZE    = 99;   // Transport's capitals are 0.746em tall, so 99px = 74px capitals
 
-  // Fonts: Transport Medium (the UK road-sign face the real cover uses) draws every
-  // character it has; this free version lacks _ and all accented letters, so
-  // Roadgeek 2005 fills in those, scaled up 111.4% so its capitals match
-  // Transport's height (0.746em vs 0.67em). The Transport file is a fixed copy
-  // made by tools/fix_transport.py (the original's letters float above the
-  // baseline). It isn't in the git repo (see README); without it the cover is
-  // all Roadgeek, at the same size.
+  // Fonts: Transport Medium (the UK road-sign face the real cover uses), built by
+  // tools/build_transport.py: fixed baseline, plus accented capitals, O-slash,
+  // L-stroke, D-stroke and _ added in Transport's style. Anything still missing
+  // (lower-case accents, ß, Æ, Œ, breve, ogonek, symbols) comes from Roadgeek 2005,
+  // scaled up 111.4% so its capitals match Transport's (0.746em vs 0.67em).
+  // The Transport file isn't in the git repo (see README); without it the cover
+  // is all Roadgeek, at the same size.
   $fontFaces = array(
     array('family' => 'transport', 'url' => 'fonts/transportmedium.woff2', 'format' => 'woff2',
-          // only the characters this file really draws (it lists more, but they're blank)
-          'extra' => 'unicode-range: U+20-22, U+25-29, U+2C-3A, U+3C, U+3E-3F, U+41-5A, U+5C, U+5E, U+61-7A, U+A0, U+A3, U+B7, U+BC-BE, U+2010, U+2153-2154, U+2219;'),
+          'extra' => ''),
     array('family' => 'roadgeek-fill', 'url' => 'fonts/roadgeek2005lowline.woff2', 'format' => 'woff2',
           'extra' => 'size-adjust: 111.4%;'),
   );
@@ -348,8 +347,8 @@ document.getElementById('savepng').addEventListener('click', async () => {
     $v = isset($_POST['inputtextarea']) ? (string) $_POST['inputtextarea'] : '';
     //trim leading or trailing whitespace
     $v = trim($v);
-    //force to uppercase
-    $v = strtoupper($v);
+    //force to uppercase (strtoupper only does A-Z, so accented letters are mapped too)
+    $v = upperLatin(strtoupper($v));
     //preserve newlines before sanitizing by replacing them to another string temporarily
     $v = str_replace("\r\n", "\n", $v);
     $v = str_replace("%0A", "\n", $v);
@@ -369,6 +368,13 @@ document.getElementById('savepng').addEventListener('click', async () => {
     //now replace the placeholder with the original newline
     $v = str_replace("[NEWLINE]", "\n", $v);
     return $v;
+  }
+
+  //upper-case accented Latin letters (Latin-1 and Latin Extended-A); PHP's
+  //strtoupper only does A-Z and this server has no mbstring
+  function upperLatin($s) {
+    static $map = array('à'=>'À', 'á'=>'Á', 'â'=>'Â', 'ã'=>'Ã', 'ä'=>'Ä', 'å'=>'Å', 'æ'=>'Æ', 'ç'=>'Ç', 'è'=>'È', 'é'=>'É', 'ê'=>'Ê', 'ë'=>'Ë', 'ì'=>'Ì', 'í'=>'Í', 'î'=>'Î', 'ï'=>'Ï', 'ð'=>'Ð', 'ñ'=>'Ñ', 'ò'=>'Ò', 'ó'=>'Ó', 'ô'=>'Ô', 'õ'=>'Õ', 'ö'=>'Ö', 'ø'=>'Ø', 'ù'=>'Ù', 'ú'=>'Ú', 'û'=>'Û', 'ü'=>'Ü', 'ý'=>'Ý', 'þ'=>'Þ', 'ÿ'=>'Ÿ', 'ā'=>'Ā', 'ă'=>'Ă', 'ą'=>'Ą', 'ć'=>'Ć', 'ĉ'=>'Ĉ', 'ċ'=>'Ċ', 'č'=>'Č', 'ď'=>'Ď', 'đ'=>'Đ', 'ē'=>'Ē', 'ĕ'=>'Ĕ', 'ė'=>'Ė', 'ę'=>'Ę', 'ě'=>'Ě', 'ĝ'=>'Ĝ', 'ğ'=>'Ğ', 'ġ'=>'Ġ', 'ģ'=>'Ģ', 'ĥ'=>'Ĥ', 'ħ'=>'Ħ', 'ĩ'=>'Ĩ', 'ī'=>'Ī', 'ĭ'=>'Ĭ', 'į'=>'Į', 'ı'=>'I', 'ĳ'=>'Ĳ', 'ĵ'=>'Ĵ', 'ķ'=>'Ķ', 'ĺ'=>'Ĺ', 'ļ'=>'Ļ', 'ľ'=>'Ľ', 'ŀ'=>'Ŀ', 'ł'=>'Ł', 'ń'=>'Ń', 'ņ'=>'Ņ', 'ň'=>'Ň', 'ŋ'=>'Ŋ', 'ō'=>'Ō', 'ŏ'=>'Ŏ', 'ő'=>'Ő', 'œ'=>'Œ', 'ŕ'=>'Ŕ', 'ŗ'=>'Ŗ', 'ř'=>'Ř', 'ś'=>'Ś', 'ŝ'=>'Ŝ', 'ş'=>'Ş', 'š'=>'Š', 'ţ'=>'Ţ', 'ť'=>'Ť', 'ŧ'=>'Ŧ', 'ũ'=>'Ũ', 'ū'=>'Ū', 'ŭ'=>'Ŭ', 'ů'=>'Ů', 'ű'=>'Ű', 'ų'=>'Ų', 'ŵ'=>'Ŵ', 'ŷ'=>'Ŷ', 'ź'=>'Ź', 'ż'=>'Ż', 'ž'=>'Ž', 'ſ'=>'S');
+    return strtr($s, $map);
   }
 
   function putRainbowsInLine($strInput, $rainbowChar) {
