@@ -33,6 +33,7 @@ That file has defects, and no accented letters. `tools/build_transport.py` fixes
 ```
 python3 -m venv /tmp/ft && /tmp/ft/bin/pip install fonttools brotli
 /tmp/ft/bin/python tools/build_transport.py "Transport Medium.ttf" fonts/roadgeek2005lowline.ttf fonts/transportmedium.woff2
+/tmp/ft/bin/python tools/font_widths.py fonts/transportmedium.woff2 fonts/transportmedium-widths.json
 ```
 
 Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
@@ -41,9 +42,11 @@ Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
 
 | Path | What it is |
 |---|---|
-| `index.php` | The whole app. The cover is one SVG, and every line is justified to exactly the same width by widening only the gaps between letters (`textLength` with `lengthAdjust="spacing"`), so letters keep their real shape. A typed line too wide to fit is squeezed instead. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
+| `index.php` | The whole app. The cover is one SVG, and every line is justified to exactly the same width by widening only the gaps between letters (`textLength` with `lengthAdjust="spacing"`), so letters keep their real shape. Lines are trimmed to fit: at most 13 characters, and letters are dropped from the end of a line that's still too wide (say, lots of `W`s), using the fonts' width tables. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
 | `fonts/roadgeek2005lowline.*` | Roadgeek 2005, in woff2, woff and ttf. |
 | `fonts/transportmedium.woff2` | Transport Medium, built by `tools/build_transport.py`, if you add it (see above). |
+| `fonts/*-widths.json` | Each font's character widths, used to trim lines that are too wide. Made by `tools/font_widths.py`. |
+| `tools/font_widths.py` | Writes a font's character widths as JSON. |
 | `tools/build_transport.py` | Fixes Transport's baseline and blank characters, adds accented capitals and `Ø Ł Đ _`, saves woff2. |
 
 ## Fonts
