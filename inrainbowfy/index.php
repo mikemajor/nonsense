@@ -77,7 +77,27 @@
   const COVER_SIZE   = 860;  // SVG viewBox width and height
   const TEXT_LEFT    = 20;   // x of the left edge of every line
   const TEXT_WIDTH   = 820;  // every line is stretched to exactly this width
-  const FONT_SIZE    = 110;
+  const FONT_SIZE    = 85;   // Transport's capitals are 0.87em tall, so 85px = 74px capitals
+
+  // Fonts: Transport Medium (the UK road-sign face the real cover uses) draws every
+  // character it has; this free version lacks _ and all accented letters, so
+  // Roadgeek 2005 fills in those, scaled up 129.4% so its capitals match
+  // Transport's height (0.867em vs 0.67em). Transport isn't in the git repo (see
+  // README); without it the cover is all Roadgeek, at the same size.
+  $fontFaces = array(
+    array('family' => 'transport', 'url' => 'fonts/transportmedium.ttf', 'format' => 'truetype',
+          // only the characters this file really draws (it lists more, but they're blank)
+          'extra' => 'unicode-range: U+20-22, U+25-29, U+2C-3A, U+3C, U+3E-3F, U+41-5A, U+5C, U+5E, U+61-7A, U+A0, U+A3, U+B7, U+BC-BE, U+2010, U+2153-2154, U+2219;'),
+    array('family' => 'roadgeek-fill', 'url' => 'fonts/roadgeek2005lowline.woff2', 'format' => 'woff2',
+          'extra' => 'size-adjust: 129.4%;'),
+  );
+  function fontFaceCss($faces) {
+    $css = '';
+    foreach ($faces as $f) {
+      $css .= "@font-face { font-family: {$f['family']}; src: url({$f['url']}) format('{$f['format']}'); {$f['extra']} }\n";
+    }
+    return $css;
+  }
   const FIRST_BASE   = 100;  // baseline y of the first line
   const LINE_PITCH   = 122;  // distance between baselines
 
@@ -145,9 +165,8 @@
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <title>inrainbowfy</title>
- <link rel="stylesheet" href="styles/stylesheet.css" type="text/css">
  <style>
-  body {
+<?= fontFaceCss($fontFaces) ?>  body {
     margin: 0;
     padding: 8px;
     background: #111;
@@ -197,6 +216,14 @@
     flex: 1 1 auto;  /* the row spans exactly the cover width */
     min-width: 0;
   }
+  .credits {
+    font-size: 12px;
+    color: #888;
+    margin-top: 16px;
+  }
+  .credits a {
+    color: #aaa;
+  }
   .button.random {
     background-color: #7a42d6;
   }
@@ -212,7 +239,7 @@
       role="img" aria-label="<?= h(implode(' / ', array_map('trim', $arrLines))) ?>">
   <style>
    text {
-     font-family: roadgeek, Arial, sans-serif;
+     font-family: transport, roadgeek-fill, Arial, sans-serif;
      font-size: <?= FONT_SIZE ?>px;
      white-space: pre;
    }
@@ -243,9 +270,13 @@
    </div>
    <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h($boxText) ?></textarea>
  </form>
+ <p class="credits">Fonts: Transport (Crown Copyright; contains public sector information licensed under the
+ <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/1/">Open Government Licence v1.0</a>)
+ and Roadgeek 2005 (&copy; Michael D. Adams, 2005).</p>
 </div>
 
 <script>
+const FONT_FACES = <?= json_encode($fontFaces, JSON_UNESCAPED_SLASHES) ?>;
 // Save the cover as a PNG: an SVG drawn as an image can't load external files,
 // so embed the font and background as data: URLs first, then draw it on a canvas.
 async function toDataURL(url) {
@@ -272,10 +303,14 @@ document.getElementById('savepng').addEventListener('click', async () => {
     catch (e) { bg.remove(); }
 
     const style = svg.querySelector('style');
-    try {
-      const font = await toDataURL('fonts/roadgeek2005lowline.woff2');
-      style.textContent = "@font-face { font-family: roadgeek; src: url(" + font + ") format('woff2'); }\n" + style.textContent;
-    } catch (e) { /* falls back to Arial */ }
+    let faces = '';
+    for (const f of FONT_FACES) {
+      try {
+        const font = await toDataURL(f.url);
+        faces += '@font-face { font-family: ' + f.family + '; src: url(' + font + ") format('" + f.format + "'); " + f.extra + ' }\n';
+      } catch (e) { /* missing font: the next one in the list is used */ }
+    }
+    style.textContent = faces + style.textContent;
 
     const svgBlob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
     const svgUrl = URL.createObjectURL(svgBlob);
