@@ -52,7 +52,8 @@ Without it, the cover is drawn entirely in Roadgeek 2005 at the same size.
 | Path | What it is |
 |---|---|
 | `index.php` | The whole app. The cover is one SVG, and every line is justified to exactly the same width by widening only the gaps between letters (`textLength` with `lengthAdjust="spacing"`), so letters keep their real shape. Lines are trimmed to fit: at most 13 characters, and letters are dropped from the end of a line that's still too wide (say, lots of `W`s), using the fonts' width tables. Scales to phone screens, and has a **save as PNG** button. Layout constants are at the top of the file. |
-| `fonts/roadgeek2005lowline.*` | Roadgeek 2005, in woff2, woff and ttf. |
+| `fonts/roadgeek2005lowline.woff2` | Roadgeek 2005, the web font the page loads. |
+| `fonts/roadgeek2005lowline.ttf` | Roadgeek 2005, original file (keeps its copyright notice); the font tools read it. |
 | `fonts/transportmedium.woff2` | Transport Medium, built by `tools/build_transport.py`, if you add it (see above). |
 | `fonts/*-widths.json` | Each font's character widths, used to trim lines that are too wide. Made by `tools/font_widths.py`. |
 | `tools/setup_fonts.sh` | One step: downloads Transport Medium and runs the two scripts below. |
