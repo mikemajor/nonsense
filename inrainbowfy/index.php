@@ -5,9 +5,11 @@
   /* Layout: the cover is drawn as one 860x860 SVG. Every line is forced to the
      same width with textLength + lengthAdjust="spacing", so lines are
      edge-aligned by widening only the gaps between letters; the letters keep
-     their real shape. The font size is small enough that every phrase in the
-     list fits; a typed line that's naturally wider than TEXT_WIDTH would
-     overlap, so fitLines() (JavaScript) squeezes just that line instead.
+     their real shape. Lines are trimmed to fit: at most 13 characters, and
+     letters are dropped from the end while the line's natural width (from the
+     fonts' width tables) is over TEXT_WIDTH. As a safety net for characters
+     neither table knows, fitLines() (JavaScript) squeezes a line that still
+     doesn't fit rather than let it overlap.
      The whole picture scales as one unit on small screens.
      Tune the cover geometry with the constants below. */
 
@@ -79,7 +81,7 @@
 
   const COVER_SIZE   = 860;  // SVG viewBox width and height
   const TEXT_LEFT    = 20;   // x of the left edge of every line
-  const TEXT_WIDTH   = 820;  // every line is stretched to exactly this width
+  const TEXT_WIDTH   = 820;  // every line is justified to exactly this width
   const FONT_SIZE    = 82;   // Transport's capitals are 0.746em tall, so 82px = 61px capitals;
                               // the widest phrase in the list just fits at this size
 
@@ -90,11 +92,12 @@
   // scaled up 111.4% so its capitals match Transport's (0.746em vs 0.67em).
   // The Transport file isn't in the git repo (see README); without it the cover
   // is all Roadgeek, at the same size.
+  const FILL_SCALE   = 1.114; // Roadgeek's size-adjust: 0.746em / 0.67em capitals
   $fontFaces = array(
     array('family' => 'transport', 'url' => 'fonts/transportmedium.woff2', 'format' => 'woff2',
           'extra' => ''),
     array('family' => 'roadgeek-fill', 'url' => 'fonts/roadgeek2005lowline.woff2', 'format' => 'woff2',
-          'extra' => 'size-adjust: 111.4%;'),
+          'extra' => 'size-adjust: ' . (FILL_SCALE * 100) . '%;'),
   );
   function fontFaceCss($faces) {
     $css = '';
@@ -103,6 +106,19 @@
     }
     return $css;
   }
+  // character widths in em, made by tools/font_widths.py: Transport's where it
+  // has the character, otherwise Roadgeek's scaled like its size-adjust
+  function loadWidths() {
+    $t = json_decode((string) @file_get_contents(__DIR__ . '/fonts/transportmedium-widths.json'), true);
+    $r = json_decode((string) @file_get_contents(__DIR__ . '/fonts/roadgeek2005lowline-widths.json'), true);
+    $w = is_array($t) ? $t : array();
+    foreach ((is_array($r) ? $r : array()) as $ch => $em) {
+      if (!isset($w[$ch])) { $w[$ch] = $em * FILL_SCALE; }
+    }
+    return $w;
+  }
+  $charWidths = loadWidths();
+
   const FIRST_BASE   = 94;   // baseline y of the first line
   const LINE_PITCH   = 122;  // distance between baselines
 
@@ -395,12 +411,28 @@ document.getElementById('savepng').addEventListener('click', async () => {
     return strtr($s, $map);
   }
 
+  //natural width in px of a finished line: these characters, the cover
+  //character, and the spaces that pad it to $desiredLineLength characters
+  function naturalWidth($chars, $rainbowChar) {
+    global $charWidths, $desiredLineLength;
+    $em = 0;
+    foreach (array_merge($chars, array($rainbowChar)) as $ch) {
+      $em += isset($charWidths[$ch]) ? $charWidths[$ch] : 0.6;
+    }
+    $em += max(0, $desiredLineLength - count($chars) - 1) * (isset($charWidths[' ']) ? $charWidths[' '] : 0.25);
+    return $em * FONT_SIZE;
+  }
+
   function putRainbowsInLine($strInput, $rainbowChar) {
     global $desiredLineLength;
     //work on characters, not bytes, so letters like Ø count once and never get split
     $chars = preg_split('//u', $strInput, -1, PREG_SPLIT_NO_EMPTY);
     //if the line is already too long, truncate to one less than desired length
     if (count($chars) >= $desiredLineLength) { $chars = array_slice($chars, 0, $desiredLineLength - 1); }
+    //if it's too wide to fit (lots of Ws, say), drop letters from the end until it fits
+    while (count($chars) > 0 && naturalWidth($chars, $rainbowChar) > TEXT_WIDTH) {
+      array_pop($chars);
+    }
     //add the cover character somewhere in the line
     array_splice($chars, rand(0, count($chars)), 0, array($rainbowChar));
     //add spaces somewhere in the line to get it to the desired length
