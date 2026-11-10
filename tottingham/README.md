@@ -71,6 +71,8 @@ The state file keeps `--mail` from sending again on later days.
 
 ## Tests
 
+From this folder:
+
 ```
 prove t/
 ```
