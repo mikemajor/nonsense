@@ -8,7 +8,21 @@
      the whole picture scales as one unit on small screens.
      Tune the cover geometry with the constants below. */
 
-  $defaultInput = strtoupper("cotton cndy\nrollerskate\nvillagefete\nradiohead\nalps mtimes\nxtrm ironng\nbwitchd rrs");
+  // phrases the starting cover and the randomize button pick from (7 at a time);
+  // add more here, upper case, up to 13 characters (longer ones get cut off)
+  $phrasePool = array(
+    'COTTON CNDY',
+    'ROLLERSKATE',
+    'VILLAGEFETE',
+    'RADIOHEAD',
+    'ALPS MTIMES',
+    'XTRM IRONNG',
+    'BWITCHD RRS',
+    'IN RAINBOWS',
+    'KING CONMAN',
+    'RAINBOW PIG',
+    'IMPALA TUSK',
+  );
   $desiredLineLength = 14;  // characters per line, after random padding
 
   const COVER_SIZE   = 860;  // SVG viewBox width and height
@@ -30,22 +44,50 @@
     array('greytext',   '_'),
   );
 
-  //sanitize the form input
-  $safeText = sanitizeInput();
-  //use the default text when nothing was entered; only 7 lines fit
-  $arrLines = array_slice(explode("\n", ($safeText === '') ? $defaultInput : $safeText), 0, 7);
+  //sanitize the form input, then decode the sanitizer's &#34;/&#39; so a quote
+  //counts as one character and can't be cut in half; h() escapes everything on output
+  $inputText = html_entity_decode(sanitizeInput(), ENT_QUOTES, 'UTF-8');
+
+  if (isset($_POST['randomize'])) {
+    //randomize: keep the user's own lines (anything not from the phrase list),
+    //fill the rest of the 7 with random phrases, and shuffle the order
+    $ownLines = array();
+    foreach (explode("\n", $inputText) as $line) {
+      $line = trim($line);
+      if ($line !== '' && !in_array($line, $phrasePool, true)) { $ownLines[] = $line; }
+    }
+    $textLines = pickPhrases($ownLines, $phrasePool);
+  } elseif ($inputText === '') {
+    //first visit, or an empty box: 7 random phrases
+    $textLines = pickPhrases(array(), $phrasePool);
+  } else {
+    //inrainbowfy: use exactly what was entered; only 7 lines fit
+    $textLines = array_slice(explode("\n", $inputText), 0, 7);
+  }
+  //what goes back in the text box
+  $boxText = implode("\n", $textLines);
+
   //put randomized In Rainbows characters into each line
-  //(decode the sanitizer's &#34;/&#39; first so a quote counts as one character
-  // and can't be cut in half; h() escapes everything again on output)
-  foreach ($arrLines as $i => $line) {
-    $arrLines[$i] = putRainbowsInLine(html_entity_decode($line, ENT_QUOTES, 'UTF-8'), $lineStyles[$i][1]);
+  $arrLines = array();
+  foreach ($textLines as $i => $line) {
+    $arrLines[$i] = putRainbowsInLine($line, $lineStyles[$i][1]);
   }
   //always have 7 lines to print
   $arrLines = array_pad($arrLines, 7, '');
 
+  //up to 7 lines: all of $keep (first 7), topped up with random unused phrases, shuffled
+  function pickPhrases($keep, $pool) {
+    $keep = array_slice(array_values($keep), 0, 7);
+    $unused = array_values(array_diff($pool, $keep));
+    shuffle($unused);
+    $lines = array_merge($keep, array_slice($unused, 0, 7 - count($keep)));
+    shuffle($lines);
+    return $lines;
+  }
+
   function h($s) {
-    // escape for HTML/SVG output; keep the &#34; / &#39; entities the sanitizer made
-    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+    // escape for HTML/SVG output
+    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
   }
 ?>
 <!DOCTYPE html>
@@ -99,10 +141,15 @@
     border: none;
     color: white;
     /* shrink padding and text on narrow screens so both buttons fit on one row */
-    padding: 15px clamp(12px, 4vw, 32px);
-    font-size: clamp(18px, 5vw, 24px);
+    padding: 15px clamp(8px, 3vw, 32px);
+    font-size: clamp(14px, 4.5vw, 24px);
     white-space: nowrap;
     cursor: pointer;
+    flex: 1 1 auto;  /* the row spans exactly the cover width */
+    min-width: 0;
+  }
+  .button.random {
+    background-color: #7a42d6;
   }
   .button.secondary {
     background-color: #555;
@@ -142,9 +189,10 @@
  <form action="" method="post">
    <div class="buttons">
     <input type="submit" value="inrainbowfy" class="button">
+    <input type="submit" name="randomize" value="randomize" class="button random" title="New random phrases (your own lines are kept)">
     <button type="button" id="savepng" class="button secondary">save as PNG</button>
    </div>
-   <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h(($safeText === '') ? $defaultInput : $safeText) ?></textarea>
+   <textarea id="inputtextarea" name="inputtextarea" rows="7" cols="15" aria-label="Your text, up to 7 lines"><?= h($boxText) ?></textarea>
  </form>
 </div>
 
